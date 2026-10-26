@@ -28,15 +28,27 @@ module.exports = function(app, passport, db) {
 
 // message board routes ===============================================================
 
-    app.post('/messages', (req, res) => {
-      db.collection('messages').save({name: req.body.name, msg: req.body.msg, thumbUp: 0, thumbDown:0}, (err, result) => {
-        if (err) return console.log(err)
-        console.log('saved to database')
-        res.redirect('/profile')
-      })
-    })
+    app.post('/messages', isLoggedIn,  (req, res) => {
+      const updateField = req.body.vote === 'down' ? 'thumbdown': 'thumbUp';
 
-    app.put('/messages', (req, res) => {
+      const update = {
+        $inc: {}
+      }
+      update.$inc[updateField] = 1
+      db.collection('messages').findOneAndUpdate({name: req.body.name, msg: req.body.msg}.
+        update, {
+          sort: {_id: -1}, 
+          returnOriginal: false
+        }, (err, result) => {
+          if (err){
+            return res.status(404).send('Message not found')
+          }
+
+          res.send(result.value)
+        }
+      )
+
+    app.put('/messages',isLoggedIn, (req, res) => {
       db.collection('messages')
       .findOneAndUpdate({name: req.body.name, msg: req.body.msg}, {
         $set: {
@@ -51,11 +63,39 @@ module.exports = function(app, passport, db) {
       })
     })
 
-    app.delete('/messages', (req, res) => {
-      db.collection('messages').findOneAndDelete({name: req.body.name, msg: req.body.msg}, (err, result) => {
+    app.delete('/messages', isLoggedIn, (req, res) => {
+      db.collection('messages').findOneAndDelete({name: req.body.name, msg: req.body.msg}, 
+        {$inc: {
+            thumbUp: 1
+        }}, 
+        {sort: {_id: -1}, 
+        returnOriginal: false},
+        (err, result) => {
         if (err) return res.send(500, err)
         res.send('Message deleted!')
       })
+    })
+
+    app.patch('/messages/down', isLoggedIN, (req, res) => {
+      db.collection('messages').findOneAndUpdate({
+        name: req.body,name, 
+        msg: req.body.msg
+      }, 
+      {
+        $inc: {
+          thumbDown: 1
+        }
+      },
+      {
+        sort: {_id: -1}, 
+        returnOriginal: false
+      }, (err, result) => {
+        if(err) {
+          return res.status(500).send(err)
+        }
+        res.send(result)
+      }
+    )
     })
 
 // =============================================================================
@@ -104,7 +144,7 @@ module.exports = function(app, passport, db) {
         user.save(function(err) {
             res.redirect('/profile');
         });
-    });
+    })); 
 
 };
 

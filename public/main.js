@@ -16,7 +16,8 @@ Array.from(thumbUp).forEach(function(element) {
             'thumbUp':thumbUp
           })
         })
-
+      })
+    })
 
 Array.from(thumbDown).forEach(function(element) {
       element.addEventListener('click', function(){

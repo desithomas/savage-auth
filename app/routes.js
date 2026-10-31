@@ -10,7 +10,10 @@ module.exports = function(app, passport, db) {
     // PROFILE SECTION =========================
     app.get('/profile', isLoggedIn, function(req, res) {
         db.collection('messages').find().toArray((err, result) => {
-          if (err) return console.log(err)
+          //actually send an error message to let you know what's going on 
+          if (err) return res.status(500).send(err)
+              //just a console log of the error message
+             console.log(err)
           res.render('profile.ejs', {
             user : req.user,
             messages: result
@@ -28,57 +31,62 @@ module.exports = function(app, passport, db) {
 
 // message board routes ===============================================================
 
-    app.post('/messages', isLoggedIn,  (req, res) => {
-      const updateField = req.body.vote === 'down' ? 'thumbdown': 'thumbUp';
+//     app.post('/messages', isLoggedIn,  (req, res) => {
+//       const updateField = req.body.vote === 'down' ? 'thumbdown': 'thumbUp';
 
-      const update = {
-        $inc: {}
-      }
-      update.$inc[updateField] = 1
-      db.collection('messages').findOneAndUpdate({name: req.body.name, msg: req.body.msg}.
-        update, {
-          sort: {_id: -1}, 
-          returnOriginal: false
-        }, (err, result) => {
-          if (err){
-            return res.status(404).send('Message not found')
-          }
+//       const update = {
 
-          res.send(result.value)
-        }
-      )
+//         //$inc is an adjustment based on a numerical value; is more reliable
+//         $inc: {}
+//       }
+    
+//       update.$inc[updateField] = 1
+//       db.collection('messages').findOneAndUpdate({name: req.body.name, msg: req.body.msg},
+//         update, {
+//           sort: {_id: -1}, 
+//           returnOriginal: false,
+//         }, (err, result) => {
+//           if (err){
+//             return res.status(404).send('Message not found')
+//           }
 
+//           res.send(result.value)
+//         }
+//       })
+//thumb up 
     app.put('/messages',isLoggedIn, (req, res) => {
       db.collection('messages')
       .findOneAndUpdate({name: req.body.name, msg: req.body.msg}, {
+
+        //$set is a complete replacement of the value 
         $set: {
           thumbUp:req.body.thumbUp + 1
         }
       }, {
         sort: {_id: -1},
-        upsert: true
+        upsert: false,
       }, (err, result) => {
         if (err) return res.send(err)
         res.send(result)
       })
     })
 
-    app.delete('/messages', isLoggedIn, (req, res) => {
-      db.collection('messages').findOneAndDelete({name: req.body.name, msg: req.body.msg}, 
-        {$inc: {
-            thumbUp: 1
-        }}, 
-        {sort: {_id: -1}, 
-        returnOriginal: false},
-        (err, result) => {
-        if (err) return res.send(500, err)
-        res.send('Message deleted!')
-      })
-    })
+//     app.delete('/messages', isLoggedIn, (req, res) => {
+//       db.collection('messages').findOneAndDelete({name: req.body.name, msg: req.body.msg}, 
+//         {$inc: {
+//             thumbUp: 1
+//         }}, 
+//         {sort: {_id: -1}, 
+//         returnOriginal: false},
+//         (err, result) => {
+//         if (err) return res.send(500, err)
+//         res.send('Message deleted!')
+//       })
+//     })
 
-    app.patch('/messages/down', isLoggedIN, (req, res) => {
+    app.put('/messages/down', isLoggedIn, (req, res) => {
       db.collection('messages').findOneAndUpdate({
-        name: req.body,name, 
+        name: req.body.name, 
         msg: req.body.msg
       }, 
       {
@@ -91,12 +99,25 @@ module.exports = function(app, passport, db) {
         returnOriginal: false
       }, (err, result) => {
         if(err) {
-          return res.status(500).send(err)
+          return res.send(err)
         }
         res.send(result)
-      }
-    )
+      })
     })
+
+app.post('/messages', isLoggedIn, (req,res) => {
+  db.collection('messages').insertOne({
+    name: req.body.name, 
+    msg: req.body.msg, 
+    thumbUp: 0, 
+    thumbDown: 0
+  }, (err, result) => {
+    if (err) {
+      return res.send(err)
+    }
+    res.end(result)
+  })
+})
 
 // =============================================================================
 // AUTHENTICATE (FIRST LOGIN) ==================================================
@@ -144,7 +165,7 @@ module.exports = function(app, passport, db) {
         user.save(function(err) {
             res.redirect('/profile');
         });
-    })); 
+    }); 
 
 };
 

@@ -16,6 +16,9 @@ If you use this product while it is still in development, please expect limited 
 * **CSS3:** Custom application styling
 * **JavaScript (ES6+):** Client-side message interactions
 
+  <img width="1478" height="696" alt="Screenshot 2026-11-02 at 1 35 29 AM" src="https://github.com/user-attachments/assets/42ef0e64-6441-4a3c-915b-49ae8c377053" />
+
+
 ## Features
 
 * User signup with an email address and password

@@ -1,7 +1,3 @@
-# demo-day
-
-Savage Auth is the in-development codename for this demo day project.
-
 # Savage Auth
 
 A 21 Savage fan site that gives users a place to create an account, securely log in, and participate in a community message board. Authenticated users can view their profile, post messages, and interact with messages through upvote and downvote controls. The application uses Passport for local authentication, MongoDB for storing users and messages, Express sessions for persistent login sessions, and EJS templates for the front end.
